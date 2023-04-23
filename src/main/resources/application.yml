@@ -1,0 +1,17 @@
+server:
+  servlet:
+    context-path: /security/api
+
+spring:
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/jwt_security
+    username: postgres
+    password: 852456
+  jpa:
+    generate-ddl: true
+    properties:
+      hibernate:
+        ddl-auto: update
+        show_sql: true
+        format_sql: true
