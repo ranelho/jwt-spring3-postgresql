@@ -1,8 +1,8 @@
-package com.test.security.autenticacao.application.service;
+package com.test.security.user.application.service;
 
-import com.test.security.autenticacao.application.api.AuthentificationRequest;
-import com.test.security.autenticacao.application.api.AuthentificationResponse;
-import com.test.security.autenticacao.application.api.RegisterRequest;
+import com.test.security.user.application.api.AuthentificationRequest;
+import com.test.security.user.application.api.AuthentificationResponse;
+import com.test.security.user.application.api.RegisterRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 

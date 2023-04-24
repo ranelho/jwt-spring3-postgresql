@@ -1,14 +1,11 @@
-package com.test.security.autenticacao.application.service;
+package com.test.security.user.application.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.test.security.autenticacao.application.api.AuthentificationRequest;
-import com.test.security.autenticacao.application.api.AuthentificationResponse;
-import com.test.security.autenticacao.application.api.RegisterRequest;
-import com.test.security.service.JwtService;
+import com.test.security.user.application.api.AuthentificationRequest;
+import com.test.security.user.application.api.AuthentificationResponse;
+import com.test.security.user.application.api.RegisterRequest;
+import com.test.security.config.service.JwtService;
 import com.test.security.token.application.service.TokenService;
-import com.test.security.token.domain.Token;
-import com.test.security.token.domain.TokenType;
-import com.test.security.token.infra.TokenSpringJPARepository;
 import com.test.security.user.application.repository.UserRepository;
 import com.test.security.user.domain.User;
 import com.test.security.user.infra.UserSpringDataJPARepository;
@@ -33,7 +30,6 @@ public class AuthApplicationService implements AuthService {
 
     private final UserSpringDataJPARepository userSpringDataJPARepository;
     private final UserRepository userRepository;
-    private final TokenSpringJPARepository tokenSpringJPARepository;
     private final TokenService tokenService;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -45,7 +41,6 @@ public class AuthApplicationService implements AuthService {
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateToken(user);
         tokenService.saveToken(user, jwtToken);
-       // saveUserToken(user, jwtToken);
         log.info("[fim]  AuthApplicationService - register");
         return AuthentificationResponse.builder().accessToken(jwtToken).refreshToken(refreshToken).build();
     }
@@ -60,26 +55,60 @@ public class AuthApplicationService implements AuthService {
                 .orElseThrow();
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
-
-        //revokeAllUserTokens(user,jwtToken);
         tokenService.revokeAllUserTokens(user,jwtToken);
         tokenService.saveToken(user, jwtToken);
-      //  saveUserToken(user, jwtToken);
         log.info("[fim]  AuthApplicationService - authenticate");
         return AuthentificationResponse.builder().accessToken(jwtToken).refreshToken(refreshToken).build();
     }
-
-   /* private void saveUserToken(User user, String jwtToken) {
-        var token = Token.builder()
-                .user(user)
-                .token(jwtToken)
-                .tokenType(TokenType.BEARER)
-                .expired(true)
-                .revoked(true)
-                .build();
-        tokenSpringJPARepository.save(token);
+    @Override
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+        log.info("[inicia]  AuthApplicationService - logout");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null) {
+            new SecurityContextLogoutHandler().logout(request, response, authentication);
+        }
+        log.info("[fim]  AuthApplicationService - logout");
+        response.setStatus(HttpServletResponse.SC_OK);
     }
-*/
+
+    public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        log.info("[inicia]  AuthApplicationService - refreshToken");
+        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        final String refreshToken;
+        final String userEmail;
+        if (authHeader == null ||!authHeader.startsWith("Bearer ")) {
+            return;
+        }
+        refreshToken = authHeader.substring(7);
+        userEmail = jwtService.extractUsername(refreshToken);
+        if (userEmail != null) {
+            var user = this.userSpringDataJPARepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            if (jwtService.isTokenValid(refreshToken, user)) {
+                var accessToken = jwtService.generateToken(user);
+                tokenService.revokeAllUserTokens(user,refreshToken);
+                tokenService.saveToken(user, accessToken);
+                var authResponse = AuthentificationResponse.builder()
+                        .accessToken(accessToken)
+                        .refreshToken(refreshToken)
+                        .build();
+                new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
+            }
+        }
+        log.info("[fim]  AuthApplicationService - refreshToken");
+    }
+
+    /* private void saveUserToken(User user, String jwtToken) {
+         var token = Token.builder()
+                 .user(user)
+                 .token(jwtToken)
+                 .tokenType(TokenType.BEARER)
+                 .expired(true)
+                 .revoked(true)
+                 .build();
+         tokenSpringJPARepository.save(token);
+     }
+ */
 /*    private void saveUserToken2_true(User user, String jwtToken) {
         var token = Token.builder()
                 .user(user)
@@ -103,45 +132,4 @@ public class AuthApplicationService implements AuthService {
         tokenSpringJPARepository.saveAll(validUserTokens);
         log.info("[fim]  AuthApplicationService - revokeAllUserTokens");
     }*/
-
-    public void refreshToken(HttpServletRequest request, HttpServletResponse response
-    ) throws IOException {
-        log.info("[inicia]  AuthApplicationService - refreshToken");
-        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-        final String refreshToken;
-        final String userEmail;
-        if (authHeader == null ||!authHeader.startsWith("Bearer ")) {
-            return;
-        }
-        refreshToken = authHeader.substring(7);
-        userEmail = jwtService.extractUsername(refreshToken);
-        if (userEmail != null) {
-            var user = this.userSpringDataJPARepository.findByEmail(userEmail)
-                    .orElseThrow();
-            if (jwtService.isTokenValid(refreshToken, user)) {
-                var accessToken = jwtService.generateToken(user);
-                //revokeAllUserTokens(user,refreshToken);
-                tokenService.revokeAllUserTokens(user,refreshToken);
-                tokenService.saveToken(user, accessToken);
-               // saveUserToken(user, accessToken);
-                var authResponse = AuthentificationResponse.builder()
-                        .accessToken(accessToken)
-                        .refreshToken(refreshToken)
-                        .build();
-                new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
-            }
-        }
-        log.info("[fim]  AuthApplicationService - refreshToken");
-    }
-
-    @Override
-    public void logout(HttpServletRequest request, HttpServletResponse response) {
-        log.info("[inicia]  AuthApplicationService - logout");
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null) {
-            new SecurityContextLogoutHandler().logout(request, response, authentication);
-        }
-        log.info("[fim]  AuthApplicationService - logout");
-        response.setStatus(HttpServletResponse.SC_OK);
-    }
 }

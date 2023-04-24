@@ -1,6 +1,6 @@
 package com.test.security.config;
 
-import com.test.security.service.JwtService;
+import com.test.security.config.service.JwtService;
 import com.test.security.token.domain.Token;
 import com.test.security.token.infra.TokenSpringJPARepository;
 import jakarta.servlet.FilterChain;

@@ -32,7 +32,7 @@ public class TokenApplicationService implements TokenService {
             token.setToken("jwtToken");
         });
         tokenRepository.saveAll(validUserTokens);
-        //tokenSpringJPARepository.saveAll(validUserTokens);
         log.info("[fim]  AuthApplicationService - revokeAllUserTokens");
     }
+
 }

@@ -1,4 +1,4 @@
-package com.test.security.autenticacao.application.api;
+package com.test.security.user.application.api;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

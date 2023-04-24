@@ -1,4 +1,4 @@
-package com.test.security.service;
+package com.test.security.token.application.service;
 
 import com.test.security.token.infra.TokenSpringJPARepository;
 import jakarta.servlet.http.HttpServletRequest;

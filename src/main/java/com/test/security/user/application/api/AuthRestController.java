@@ -1,6 +1,6 @@
-package com.test.security.autenticacao.application.api;
+package com.test.security.user.application.api;
 
-import com.test.security.autenticacao.application.service.AuthService;
+import com.test.security.user.application.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
