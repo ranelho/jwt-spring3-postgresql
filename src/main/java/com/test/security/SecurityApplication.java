@@ -10,5 +10,4 @@ public class SecurityApplication {
 		SpringApplication.run(SecurityApplication.class, args);
 		System.out.println("Compiled !");
 	}
-
 }

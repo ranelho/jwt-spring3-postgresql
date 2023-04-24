@@ -1,4 +1,4 @@
-package com.test.security.token;
+package com.test.security.token.domain;
 
 import com.test.security.user.domain.User;
 import jakarta.persistence.*;
@@ -32,4 +32,10 @@ public class Token {
     @JoinColumn(name = "user_id")
     public User user;
 
+    public Token(User user, String jwtToken) {
+        this.token = jwtToken;
+        this.revoked = true;
+        this.expired = true;
+        this.user = user;
+    }
 }

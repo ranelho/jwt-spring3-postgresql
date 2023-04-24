@@ -1,10 +1,9 @@
 package com.test.security.service;
 
-import com.test.security.token.TokenRepository;
+import com.test.security.token.infra.TokenSpringJPARepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
@@ -13,7 +12,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class LogoutService implements LogoutHandler {
-    private final TokenRepository tokenRepository;
+    private final TokenSpringJPARepository tokenSpringJPARepository;
     @Override
     public void logout(
             HttpServletRequest request,
@@ -26,12 +25,12 @@ public class LogoutService implements LogoutHandler {
             return;
         }
         jwt = authHeader.substring(7);
-        var storedToken = tokenRepository.findByToken(jwt)
+        var storedToken = tokenSpringJPARepository.findByToken(jwt)
                 .orElse(null);
         if (storedToken != null) {
             storedToken.setExpired(true);
             storedToken.setRevoked(true);
-            tokenRepository.save(storedToken);
+            tokenSpringJPARepository.save(storedToken);
 
             SecurityContextHolder.clearContext();
         }

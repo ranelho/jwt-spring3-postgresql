@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,10 +38,9 @@ public class User implements UserDetails {
         this.firstname = request.getFirstname();
         this.lastname = request.getLastname();
         this.email = request.getEmail();
-        this.password = request.getPassword();
+        this.password = new BCryptPasswordEncoder().encode(request.getPassword());
         this.role = request.getRoles();
     }
-    //  Role role;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

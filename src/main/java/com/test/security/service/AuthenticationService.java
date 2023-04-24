@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.test.security.autenticacao.application.api.AuthentificationRequest;
 import com.test.security.autenticacao.application.api.AuthentificationResponse;
 import com.test.security.autenticacao.application.api.RegisterRequest;
-import com.test.security.token.Token;
-import com.test.security.token.TokenRepository;
-import com.test.security.token.TokenType;
+import com.test.security.token.domain.Token;
+import com.test.security.token.infra.TokenSpringJPARepository;
+import com.test.security.token.domain.TokenType;
 import com.test.security.user.domain.Role;
 import com.test.security.user.domain.User;
 import com.test.security.user.infra.UserSpringDataJPARepository;
@@ -66,7 +66,7 @@ public class AuthenticationService {
 
 
     private final UserSpringDataJPARepository userSpringDataJPARepository;
-    private final TokenRepository tokenRepository;
+    private final TokenSpringJPARepository tokenSpringJPARepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -128,7 +128,7 @@ public class AuthenticationService {
                 .expired(false)
                 .revoked(false)
                 .build();
-        tokenRepository.save(token);
+        tokenSpringJPARepository.save(token);
     }
 
     private void saveUserToken2_true(User user, String jwtToken) {
@@ -139,10 +139,10 @@ public class AuthenticationService {
                 .expired(true)
                 .revoked(true)
                 .build();
-        tokenRepository.save(token);
+        tokenSpringJPARepository.save(token);
     }
     private void revokeAllUserTokens(User user,String jwtToken) {
-        var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getId());
+        var validUserTokens = tokenSpringJPARepository.findAllValidTokenByUser(user.getId());
         if (validUserTokens.isEmpty())
             return;
         validUserTokens.forEach(token -> {
@@ -150,7 +150,7 @@ public class AuthenticationService {
             token.setRevoked(true);
             token.setToken("jwtToken");
         });
-        tokenRepository.saveAll(validUserTokens);
+        tokenSpringJPARepository.saveAll(validUserTokens);
     }
 
     public void refreshToken(

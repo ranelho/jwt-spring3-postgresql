@@ -5,9 +5,10 @@ import com.test.security.autenticacao.application.api.AuthentificationRequest;
 import com.test.security.autenticacao.application.api.AuthentificationResponse;
 import com.test.security.autenticacao.application.api.RegisterRequest;
 import com.test.security.service.JwtService;
-import com.test.security.token.Token;
-import com.test.security.token.TokenRepository;
-import com.test.security.token.TokenType;
+import com.test.security.token.application.service.TokenService;
+import com.test.security.token.domain.Token;
+import com.test.security.token.domain.TokenType;
+import com.test.security.token.infra.TokenSpringJPARepository;
 import com.test.security.user.application.repository.UserRepository;
 import com.test.security.user.domain.User;
 import com.test.security.user.infra.UserSpringDataJPARepository;
@@ -20,7 +21,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Service;
 
@@ -33,8 +33,8 @@ public class AuthApplicationService implements AuthService {
 
     private final UserSpringDataJPARepository userSpringDataJPARepository;
     private final UserRepository userRepository;
-    private final TokenRepository tokenRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final TokenSpringJPARepository tokenSpringJPARepository;
+    private final TokenService tokenService;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
@@ -44,49 +44,42 @@ public class AuthApplicationService implements AuthService {
         User user = userRepository.salva(new User(request));
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateToken(user);
-        saveUserToken(user, jwtToken);
+        tokenService.saveToken(user, jwtToken);
+       // saveUserToken(user, jwtToken);
         log.info("[fim]  AuthApplicationService - register");
-        return AuthentificationResponse.builder()
-                .accessToken(jwtToken)
-                .refreshToken(refreshToken)
-                .build();
+        return AuthentificationResponse.builder().accessToken(jwtToken).refreshToken(refreshToken).build();
     }
 
     @Override
     public AuthentificationResponse authenticate(AuthentificationRequest request) {
         log.info("[inicia]  AuthApplicationService - authenticate");
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
+                new UsernamePasswordAuthenticationToken(request.getEmail(),request.getPassword())
         );
-        var user = userSpringDataJPARepository.findByEmail(request.getEmail())
+        var user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow();
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
 
         revokeAllUserTokens(user,jwtToken);
-        saveUserToken(user, jwtToken);
+        tokenService.saveToken(user, jwtToken);
+      //  saveUserToken(user, jwtToken);
         log.info("[fim]  AuthApplicationService - authenticate");
-        return AuthentificationResponse.builder()
-                .accessToken(jwtToken)
-                .refreshToken(refreshToken)
-                .build();
+        return AuthentificationResponse.builder().accessToken(jwtToken).refreshToken(refreshToken).build();
     }
 
-    private void saveUserToken(User user, String jwtToken) {
+   /* private void saveUserToken(User user, String jwtToken) {
         var token = Token.builder()
                 .user(user)
                 .token(jwtToken)
                 .tokenType(TokenType.BEARER)
-                .expired(false)
-                .revoked(false)
+                .expired(true)
+                .revoked(true)
                 .build();
-        tokenRepository.save(token);
+        tokenSpringJPARepository.save(token);
     }
-
-    private void saveUserToken2_true(User user, String jwtToken) {
+*/
+/*    private void saveUserToken2_true(User user, String jwtToken) {
         var token = Token.builder()
                 .user(user)
                 .token(jwtToken)
@@ -95,10 +88,10 @@ public class AuthApplicationService implements AuthService {
                 .revoked(true)
                 .build();
         tokenRepository.save(token);
-    }
+    }*/
     private void revokeAllUserTokens(User user,String jwtToken) {
         log.info("[inicia]  AuthApplicationService - revokeAllUserTokens");
-        var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getId());
+        var validUserTokens = tokenSpringJPARepository.findAllValidTokenByUser(user.getId());
         if (validUserTokens.isEmpty())
             return;
         validUserTokens.forEach(token -> {
@@ -106,7 +99,7 @@ public class AuthApplicationService implements AuthService {
             token.setRevoked(true);
             token.setToken("jwtToken");
         });
-        tokenRepository.saveAll(validUserTokens);
+        tokenSpringJPARepository.saveAll(validUserTokens);
         log.info("[fim]  AuthApplicationService - revokeAllUserTokens");
     }
 
@@ -127,7 +120,8 @@ public class AuthApplicationService implements AuthService {
             if (jwtService.isTokenValid(refreshToken, user)) {
                 var accessToken = jwtService.generateToken(user);
                 revokeAllUserTokens(user,refreshToken);
-                saveUserToken(user, accessToken);
+                tokenService.saveToken(user, accessToken);
+               // saveUserToken(user, accessToken);
                 var authResponse = AuthentificationResponse.builder()
                         .accessToken(accessToken)
                         .refreshToken(refreshToken)

@@ -1,28 +1,22 @@
 package com.test.security.config;
 
 import com.test.security.service.JwtService;
-import com.test.security.token.Token;
-import com.test.security.token.TokenRepository;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
+import com.test.security.token.domain.Token;
+import com.test.security.token.infra.TokenSpringJPARepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.security.Key;
 import java.util.Optional;
 
 @Component
@@ -30,7 +24,7 @@ import java.util.Optional;
 public class JwtAuthentificationFilter extends OncePerRequestFilter {
     final JwtService jwtService;
     final UserDetailsService userDetailsService;
-    private final TokenRepository tokenRepository;
+    private final TokenSpringJPARepository tokenSpringJPARepository;
 
 
     @Override
@@ -56,7 +50,7 @@ public class JwtAuthentificationFilter extends OncePerRequestFilter {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
 
 
-            boolean isTokenValid = tokenRepository.findByToken(jwt)
+            boolean isTokenValid = tokenSpringJPARepository.findByToken(jwt)
                     .map(t -> t.isExpired()  )
                     .orElse(false);
 
@@ -81,7 +75,7 @@ public class JwtAuthentificationFilter extends OncePerRequestFilter {
 
 
     public boolean isTokenValid(String token) {
-        Optional<Token> optionalToken = tokenRepository.findByToken(token);
+        Optional<Token> optionalToken = tokenSpringJPARepository.findByToken(token);
         if (optionalToken.isPresent()) {
             Token t = optionalToken.get();
             return !t.isExpired() && !t.isRevoked();
