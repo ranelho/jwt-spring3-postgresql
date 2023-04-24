@@ -1,4 +1,4 @@
-package com.test.security.auth;
+package com.test.security.autenticacao.application.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

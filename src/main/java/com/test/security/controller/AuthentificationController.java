@@ -1,8 +1,8 @@
 package com.test.security.controller;
 
-import com.test.security.auth.AuthentificationRequest;
-import com.test.security.auth.AuthentificationResponse;
-import com.test.security.auth.RegisterRequest;
+import com.test.security.autenticacao.application.api.AuthentificationRequest;
+import com.test.security.autenticacao.application.api.AuthentificationResponse;
+import com.test.security.autenticacao.application.api.RegisterRequest;
 import com.test.security.service.AuthenticationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 
 @RestController
-@RequestMapping("/v1/auth")
+@RequestMapping("/v1/auth2")
 @RequiredArgsConstructor
 public class AuthentificationController {
     private  final AuthenticationService authenticationService;
