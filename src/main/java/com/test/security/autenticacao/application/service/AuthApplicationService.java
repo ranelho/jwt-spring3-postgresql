@@ -61,7 +61,8 @@ public class AuthApplicationService implements AuthService {
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
 
-        revokeAllUserTokens(user,jwtToken);
+        //revokeAllUserTokens(user,jwtToken);
+        tokenService.revokeAllUserTokens(user,jwtToken);
         tokenService.saveToken(user, jwtToken);
       //  saveUserToken(user, jwtToken);
         log.info("[fim]  AuthApplicationService - authenticate");
@@ -89,7 +90,7 @@ public class AuthApplicationService implements AuthService {
                 .build();
         tokenRepository.save(token);
     }*/
-    private void revokeAllUserTokens(User user,String jwtToken) {
+   /* private void revokeAllUserTokens(User user,String jwtToken) {
         log.info("[inicia]  AuthApplicationService - revokeAllUserTokens");
         var validUserTokens = tokenSpringJPARepository.findAllValidTokenByUser(user.getId());
         if (validUserTokens.isEmpty())
@@ -101,7 +102,7 @@ public class AuthApplicationService implements AuthService {
         });
         tokenSpringJPARepository.saveAll(validUserTokens);
         log.info("[fim]  AuthApplicationService - revokeAllUserTokens");
-    }
+    }*/
 
     public void refreshToken(HttpServletRequest request, HttpServletResponse response
     ) throws IOException {
@@ -119,7 +120,8 @@ public class AuthApplicationService implements AuthService {
                     .orElseThrow();
             if (jwtService.isTokenValid(refreshToken, user)) {
                 var accessToken = jwtService.generateToken(user);
-                revokeAllUserTokens(user,refreshToken);
+                //revokeAllUserTokens(user,refreshToken);
+                tokenService.revokeAllUserTokens(user,refreshToken);
                 tokenService.saveToken(user, accessToken);
                // saveUserToken(user, accessToken);
                 var authResponse = AuthentificationResponse.builder()
