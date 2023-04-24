@@ -1,6 +1,6 @@
 package com.test.security.autenticacao.application.api;
 
-import com.test.security.user.Role;
+import com.test.security.user.domain.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

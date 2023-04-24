@@ -1,5 +1,6 @@
-package com.test.security.user;
+package com.test.security.user.domain;
 
+import com.test.security.autenticacao.application.api.RegisterRequest;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,7 +31,15 @@ public class User implements UserDetails {
     private String password;
     @Enumerated(EnumType.STRING)
     List<Role> role;
-  //  Role role;
+
+    public User(RegisterRequest request) {
+        this.firstname = request.getFirstname();
+        this.lastname = request.getLastname();
+        this.email = request.getEmail();
+        this.password = request.getPassword();
+        this.role = request.getRoles();
+    }
+    //  Role role;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

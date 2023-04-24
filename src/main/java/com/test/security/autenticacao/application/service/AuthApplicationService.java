@@ -8,9 +8,9 @@ import com.test.security.service.JwtService;
 import com.test.security.token.Token;
 import com.test.security.token.TokenRepository;
 import com.test.security.token.TokenType;
-import com.test.security.user.Role;
-import com.test.security.user.User;
-import com.test.security.user.UserRepository;
+import com.test.security.user.application.repository.UserRepository;
+import com.test.security.user.domain.User;
+import com.test.security.user.infra.UserSpringDataJPARepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -25,14 +25,13 @@ import org.springframework.security.web.authentication.logout.SecurityContextLog
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Log4j2
 public class AuthApplicationService implements AuthService {
 
+    private final UserSpringDataJPARepository userSpringDataJPARepository;
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
@@ -42,18 +41,10 @@ public class AuthApplicationService implements AuthService {
     @Override
     public AuthentificationResponse register(RegisterRequest request) {
         log.info("[inicia]  AuthApplicationService - register");
-        List<Role> roles = new ArrayList<Role>(request.getRoles());
-        var user = User.builder()
-                .firstname(request.getFirstname())
-                .lastname(request.getLastname())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(roles)
-                .build();
-        var savedUser = userRepository.save(user);
+        User user = userRepository.salva(new User(request));
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateToken(user);
-        saveUserToken(savedUser, jwtToken);
+        saveUserToken(user, jwtToken);
         log.info("[fim]  AuthApplicationService - register");
         return AuthentificationResponse.builder()
                 .accessToken(jwtToken)
@@ -70,7 +61,7 @@ public class AuthApplicationService implements AuthService {
                         request.getPassword()
                 )
         );
-        var user = userRepository.findByEmail(request.getEmail())
+        var user = userSpringDataJPARepository.findByEmail(request.getEmail())
                 .orElseThrow();
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
@@ -131,7 +122,7 @@ public class AuthApplicationService implements AuthService {
         refreshToken = authHeader.substring(7);
         userEmail = jwtService.extractUsername(refreshToken);
         if (userEmail != null) {
-            var user = this.userRepository.findByEmail(userEmail)
+            var user = this.userSpringDataJPARepository.findByEmail(userEmail)
                     .orElseThrow();
             if (jwtService.isTokenValid(refreshToken, user)) {
                 var accessToken = jwtService.generateToken(user);

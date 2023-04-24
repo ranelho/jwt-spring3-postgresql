@@ -7,9 +7,9 @@ import com.test.security.autenticacao.application.api.RegisterRequest;
 import com.test.security.token.Token;
 import com.test.security.token.TokenRepository;
 import com.test.security.token.TokenType;
-import com.test.security.user.Role;
-import com.test.security.user.User;
-import com.test.security.user.UserRepository;
+import com.test.security.user.domain.Role;
+import com.test.security.user.domain.User;
+import com.test.security.user.infra.UserSpringDataJPARepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -65,7 +65,7 @@ public class AuthenticationService {
 */
 
 
-    private final UserRepository userRepository;
+    private final UserSpringDataJPARepository userSpringDataJPARepository;
     private final TokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -83,7 +83,7 @@ public class AuthenticationService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(roles)
                 .build();
-        var savedUser = userRepository.save(user);
+        var savedUser = userSpringDataJPARepository.save(user);
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateToken(user);
         saveUserToken(savedUser, jwtToken);
@@ -103,7 +103,7 @@ public class AuthenticationService {
                         request.getPassword()
                 )
         );
-        var user = userRepository.findByEmail(request.getEmail())
+        var user = userSpringDataJPARepository.findByEmail(request.getEmail())
                 .orElseThrow();
         var jwtToken = jwtService.generateToken(user);
          var refreshToken = jwtService.generateRefreshToken(user);
@@ -166,7 +166,7 @@ public class AuthenticationService {
         refreshToken = authHeader.substring(7);
         userEmail = jwtService.extractUsername(refreshToken);
         if (userEmail != null) {
-            var user = this.userRepository.findByEmail(userEmail)
+            var user = this.userSpringDataJPARepository.findByEmail(userEmail)
                     .orElseThrow();
             if (jwtService.isTokenValid(refreshToken, user)) {
                 var accessToken = jwtService.generateToken(user);

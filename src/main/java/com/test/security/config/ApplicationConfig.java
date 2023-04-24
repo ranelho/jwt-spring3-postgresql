@@ -1,6 +1,6 @@
 package com.test.security.config;
 
-import com.test.security.user.UserRepository;
+import com.test.security.user.infra.UserSpringDataJPARepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,7 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 @RequiredArgsConstructor
 public class ApplicationConfig {
-    private final UserRepository repository;
+    private final UserSpringDataJPARepository repository;
 
     @Bean
     public UserDetailsService userDetailsService(){

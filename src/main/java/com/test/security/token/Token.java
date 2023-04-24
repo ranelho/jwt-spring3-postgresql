@@ -1,6 +1,6 @@
 package com.test.security.token;
 
-import com.test.security.user.User;
+import com.test.security.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
