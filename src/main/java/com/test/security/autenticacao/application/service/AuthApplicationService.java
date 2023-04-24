@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.test.security.autenticacao.application.api.AuthentificationRequest;
 import com.test.security.autenticacao.application.api.AuthentificationResponse;
 import com.test.security.autenticacao.application.api.RegisterRequest;
-import com.test.security.autenticacao.application.service.AuthService;
 import com.test.security.service.JwtService;
 import com.test.security.token.Token;
 import com.test.security.token.TokenRepository;
@@ -43,9 +42,7 @@ public class AuthApplicationService implements AuthService {
     @Override
     public AuthentificationResponse register(RegisterRequest request) {
         log.info("[inicia]  AuthApplicationService - register");
-        List<Role> roles = new ArrayList<Role>();
-        roles.add(Role.USER);
-        roles.add(Role.ADMIN);
+        List<Role> roles = new ArrayList<Role>(request.getRoles());
         var user = User.builder()
                 .firstname(request.getFirstname())
                 .lastname(request.getLastname())
